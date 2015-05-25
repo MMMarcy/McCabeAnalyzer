@@ -1,3 +1,5 @@
+import entities._
+
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -7,41 +9,46 @@ import scala.io.Source
  */
 object McCabeAnalyzer {
 
-  def startParsing(fileName: String): List[Function] = {
+  def startParsing(fileName: String): List[Option[String => (UFTFunction, Seq[UFTLine])]] = {
     val src = fileName
     val lines = Source.fromFile(src).getLines().filterNot(filterFunction)
     createFunctionList(lines, fileName)
   }
 
   def filterFunction(line: String): Boolean = {
-    /*line.contains("Function") ||
-      (line.contains("If") && line.contains("Then")) ||
-      line.contains("Else") ||
-      line.contains("For") ||
-      line.contains("Case")||
-      line.contains("End If") ||
-      line.contains("End Function")*/
+    //TODO: remove commented lines
     line.matches("(?m)^\\s*$[\n\r]{1,}")
   }
 
 
-  def createFunctionList(lines: Iterator[String], fileName: String): List[Function] = {
-    val buffer = ListBuffer[Function]()
+  def createFunctionList(lines: Iterator[String], fileName: String):
+  List[Option[String => (UFTFunction, Seq[UFTLine])]] = {
+    val buffer = ListBuffer[Option[String => (UFTFunction, Seq[UFTLine])]]()
     while (lines.hasNext) {
-      calculateFunctionScore(lines, fileName).foreach(op => buffer.append(op))
+      buffer += calculateFunctionScore(lines, fileName)
     }
     buffer.toList
   }
 
-  def calculateFunctionScore(lines: Iterator[String], fileName: String): Option[Function] = {
+  def calculateFunctionScore(lines: Iterator[String], fileName: String):
+  Option[String => (UFTFunction, Seq[UFTLine])] = {
+
     val firstLine = lines.next()
     if (!firstLine.contains("Function"))
       return None
+
     val name = firstLine.split(" ").dropWhile(!_.equals("Function"))(1)
     val body = lines.takeWhile(s => !s.contains("End Function")).toList
+    val lineMetrics = body.map(line => calculateLineMetrics(line))
     val hash = body.mkString("").hashCode
     val score = body.foldLeft(1)((acc, line) => acc + getValueForLine(line))
-    Some(Function(name, fileName, score, hash.toString))
+    Some(str => (0, str, name, fileName, score, hash.toString) -> lineMetrics)
+  }
+
+  def calculateLineMetrics(line: String): UFTLine = {
+    //TODO: improve logic for getting number of parameters
+    val parametersCount = math.max(line.filter(_ == '(').length, line.filter(_ == ',').length)
+    (0, 0, line.length, parametersCount)
   }
 
   def getValueForLine(line: String) = {
@@ -53,7 +60,6 @@ object McCabeAnalyzer {
     }
   }
 
-  case class Function(name: String, file: String, mcCabeScore: Int, hash: String) {}
 
 }
 

@@ -1,6 +1,8 @@
 import java.io.File
 
 import entities.{UFTFunction, UFTLine}
+import org.tmatesoft.hg.core.HgChangeset
+import repository.Analyzer
 
 import scala.collection.mutable.ListBuffer
 
@@ -11,38 +13,41 @@ object EntryPoint {
 
   def main(args: Array[String]) {
 
+    val rootFolder = new File(args(0).replaceAll("\\\\", "/"))
+
     try {
-      DatabaseHandler.openConnection()
-      DatabaseHandler.createSchema()
+      setupDatabase()
+      Analyzer.initRepositoryAnalyzer(rootFolder)
 
-      val rootFolder = new File(args(0).replaceAll("\\\\", "/"))
-      val files = getFileRecursively(rootFolder)
-
-      //TODO: add revision
-      for{
-        revision <- List("testRevision")
-        file <- files
-      }{
-        val result = McCabeAnalyzer.startParsing(file.getAbsolutePath)
-        val b = ListBuffer[(UFTFunction,Seq[UFTLine])]()
-        result.foreach{
-          case None =>
-          case Some(res) => b += res(revision)
+      for (revision <- Analyzer.getRevisions) {
+        Analyzer.checkoutRevision(revision)
+        getFileRecursively(rootFolder).foreach {
+          analyzeFile(_, revision)
         }
-        DatabaseHandler.insert(b.toList)
       }
     }
     catch {
       case e: Exception => e.printStackTrace()
     }
-    finally {
-      //Thread.sleep(5000)
-      DatabaseHandler.closeConnection()
-    }
+    finally DatabaseHandler.closeConnection()
 
   }
 
+  def analyzeFile(file: File, revision: HgChangeset): Unit = {
+    val result = McCabeAnalyzer.startParsing(file.getAbsolutePath)
+    val b = ListBuffer[(UFTFunction, Seq[UFTLine])]()
+    result.foreach {
+      case None =>
+      case Some(res) => b += res(revision.getRevisionIndex.toString)
+    }
+    DatabaseHandler.insert(b.toList)
 
+  }
+
+  def setupDatabase(): Unit = {
+    DatabaseHandler.openConnection()
+    DatabaseHandler.createSchema()
+  }
 
   def getFileRecursively(root: File): Array[File] = {
     if (root.isDirectory)

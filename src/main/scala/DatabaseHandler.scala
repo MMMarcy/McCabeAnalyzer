@@ -3,7 +3,9 @@ import slick.driver.H2Driver
 import slick.driver.H2Driver.api._
 import slick.jdbc.TransactionIsolation
 
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 
 
 /**
@@ -22,14 +24,16 @@ object DatabaseHandler {
   }
 
   def closeConnection(): Unit = {
-    db.foreach(_.shutdown)
+    //
     db.foreach(_.close())
+    db.foreach(_.shutdown)
   }
 
   def createSchema(): Unit = {
     require(db.isDefined)
     val createSchemaStmt = (functions.schema ++ lines.schema).create
-    db.foreach(_.run(DBIO.seq(createSchemaStmt).withPinnedSession))
+    val result = db.map(_.run(DBIO.seq(createSchemaStmt).withPinnedSession))
+    Await.result(result.get, Duration.Inf)
   }
 
   def insert(results: List[(UFTFunction, Seq[UFTLine])]): Unit = {
@@ -45,13 +49,15 @@ object DatabaseHandler {
 
     val insertStmt = DBIO.sequence(results.map(f))
 
-    db.foreach {
+    val g = db.map {
       connection =>
         connection.run {
           insertStmt
         }
-          .onComplete { case s => println(s) }
     }
+    g.foreach(_.onFailure { case s => println(s) })
+
+    Await.result(g.get, Duration.Inf)
   }
 
 }

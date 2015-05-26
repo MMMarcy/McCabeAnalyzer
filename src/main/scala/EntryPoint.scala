@@ -1,7 +1,6 @@
 import java.io.File
-import java.sql.{Connection, DriverManager}
 
-import entities.{UFTLine, UFTFunction}
+import entities.{UFTFunction, UFTLine}
 
 import scala.collection.mutable.ListBuffer
 
@@ -36,7 +35,10 @@ object EntryPoint {
     catch {
       case e: Exception => e.printStackTrace()
     }
-    finally DatabaseHandler.closeConnection()
+    finally {
+      //Thread.sleep(5000)
+      DatabaseHandler.closeConnection()
+    }
 
   }
 

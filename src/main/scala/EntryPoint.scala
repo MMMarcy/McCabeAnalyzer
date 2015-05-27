@@ -2,12 +2,13 @@ import java.io.File
 
 import entities.{UFTFunction, UFTLine}
 import org.tmatesoft.hg.core.HgChangeset
-import repository.Analyzer
+import repository.HgAnalyzer
 
 import scala.collection.mutable.ListBuffer
 
 /**
- * Created by marcello.steiner on 2015-05-22.
+ *
+ * Created by Marcello Steiner on 2015-05-22.
  */
 object EntryPoint {
 
@@ -17,10 +18,10 @@ object EntryPoint {
 
     try {
       setupDatabase()
-      Analyzer.initRepositoryAnalyzer(rootFolder)
+      HgAnalyzer.initRepositoryAnalyzer(rootFolder)
 
-      for (revision <- Analyzer.getRevisions) {
-        Analyzer.checkoutRevision(revision)
+      for (revision <- HgAnalyzer.getRevisions) {
+        HgAnalyzer.checkoutRevision(revision)
         getFileRecursively(rootFolder).foreach {
           analyzeFile(_, revision)
         }
@@ -49,7 +50,7 @@ object EntryPoint {
     DatabaseHandler.createSchema()
   }
 
-  def getFileRecursively(root: File): Array[File] = {
+  protected def getFileRecursively(root: File): Array[File] = {
     if (root.isDirectory)
       root.listFiles().flatMap(getFileRecursively)
     else if (root.getName.endsWith(".mts"))

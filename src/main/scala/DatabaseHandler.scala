@@ -20,7 +20,7 @@ object DatabaseHandler {
   var db: Option[H2Driver.backend.Database] = None
 
   def openConnection(): Unit = {
-    db = Some(Database.forConfig("h2mem1"))
+    db = Some(Database.forConfig("database.config"))
   }
 
   def closeConnection(): Unit = {

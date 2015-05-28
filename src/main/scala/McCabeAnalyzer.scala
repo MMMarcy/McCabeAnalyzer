@@ -13,13 +13,13 @@ object McCabeAnalyzer {
 
   def startParsing(fileName: String): List[Option[String => (UFTFunction, Seq[UFTLine])]] = {
     val src = fileName
-    val lines = Source.fromFile(src).getLines().filterNot(filterFunction)
+    val lines = Source.fromFile(src).getLines().filter(filterFunction)
     createFunctionList(lines, fileName)
   }
 
   def filterFunction(line: String): Boolean = {
     //TODO: remove commented lines
-    line.matches("(?m)^\\s*$[\n\r]{1,}")
+    !(line.contains("'") || line.matches("(?m)^\\s*$[\n\r]{1,}"))
   }
 
 
@@ -35,18 +35,29 @@ object McCabeAnalyzer {
   def calculateFunctionScore(lines: Iterator[String], fileName: String):
   Option[String => (UFTFunction, Seq[UFTLine])] = {
 
-    val firstLine = lines.next().toLowerCase(Locale.ENGLISH)
-    if (!firstLine.contains("function") || !firstLine.contains("fub"))
+    val firstLine = lines.next().toLowerCase.split(" ")
+
+    val isFunctionDeclaration = firstLine.exists(s => s.equals("function") || s.equals("sub")) &&
+    !firstLine.exists(s => s.equals("end"))
+
+
+    if (!isFunctionDeclaration)
       return None
 
-    val name = firstLine.split(" ").dropWhile(!_.equals("function"))(1)
+    println(firstLine.mkString(" "))
+
+    val name = firstLine
+      .dropWhile(l => !(l.equals("function") || l.equals("sub")))(1)
+
     val body = lines
-      .map(_.toLowerCase(Locale.ENGLISH))
-      .takeWhile(s => !s.contains("end function") || !s.contains("end sub"))
+      .map(_.toLowerCase)
+      .takeWhile(s => !(s.contains("end function") || s.contains("end sub")))
       .toList
+
     val lineMetrics = body.map(line => calculateLineMetrics(line))
     val hash = body.mkString("").hashCode
     val score = body.foldLeft(1)((acc, line) => acc + getValueForLine(line))
+
     Some(str => (0, str, name, fileName, score, hash.toString) -> lineMetrics)
   }
 

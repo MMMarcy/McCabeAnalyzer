@@ -1,5 +1,4 @@
 import java.io.File
-import java.util.Locale
 
 import entities.{UFTFunction, UFTLine}
 import org.tmatesoft.hg.core.HgChangeset
@@ -23,8 +22,8 @@ object EntryPoint {
 
       for (revision <- HgAnalyzer.getRevisions) {
         HgAnalyzer.checkoutRevision(revision)
-        getFileRecursively(rootFolder).foreach {
-          analyzeFile(_, revision)
+        getFileRecursively(rootFolder).foreach { file =>
+          analyzeFile(file, revision)
         }
       }
     }
@@ -54,7 +53,7 @@ object EntryPoint {
     if (root.isDirectory)
       root.listFiles().flatMap(getFileRecursively)
     else {
-      val name = root.getName.toLowerCase(Locale.ENGLISH)
+      val name = root.getName.toLowerCase
       if (name.endsWith(".mts") || name.endsWith(".qfl") || name.endsWith(".vbs"))
         Array(root)
       else

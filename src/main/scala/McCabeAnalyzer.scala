@@ -1,3 +1,5 @@
+import java.util.Locale
+
 import entities._
 
 import scala.collection.mutable.ListBuffer
@@ -33,12 +35,15 @@ object McCabeAnalyzer {
   def calculateFunctionScore(lines: Iterator[String], fileName: String):
   Option[String => (UFTFunction, Seq[UFTLine])] = {
 
-    val firstLine = lines.next()
-    if (!firstLine.contains("Function"))
+    val firstLine = lines.next().toLowerCase(Locale.ENGLISH)
+    if (!firstLine.contains("function") || !firstLine.contains("fub"))
       return None
 
-    val name = firstLine.split(" ").dropWhile(!_.equals("Function"))(1)
-    val body = lines.takeWhile(s => !s.contains("End Function")).toList
+    val name = firstLine.split(" ").dropWhile(!_.equals("function"))(1)
+    val body = lines
+      .map(_.toLowerCase(Locale.ENGLISH))
+      .takeWhile(s => !s.contains("end function") || !s.contains("end sub"))
+      .toList
     val lineMetrics = body.map(line => calculateLineMetrics(line))
     val hash = body.mkString("").hashCode
     val score = body.foldLeft(1)((acc, line) => acc + getValueForLine(line))
@@ -53,9 +58,10 @@ object McCabeAnalyzer {
 
   def getValueForLine(line: String) = {
     line match {
-      case s if s.contains("If") && s.contains("Then") => 1
-      case s if s.contains("Case") => 1
-      case s if s.contains("For") && !s.contains("Exit") => 1
+      case s if s.contains("if") && s.contains("then") => 1
+      case s if s.contains("case") => 1
+      case s if s.contains("for") && !s.contains("exit") => 1
+      case s if s.contains("while") => 1
       case _ => 0
     }
   }

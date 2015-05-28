@@ -1,4 +1,5 @@
 import java.io.File
+import java.util.Locale
 
 import entities.{UFTFunction, UFTLine}
 import org.tmatesoft.hg.core.HgChangeset
@@ -42,7 +43,6 @@ object EntryPoint {
       case Some(res) => b += res(revision.getRevisionIndex.toString)
     }
     DatabaseHandler.insert(b.toList)
-
   }
 
   def setupDatabase(): Unit = {
@@ -53,10 +53,13 @@ object EntryPoint {
   protected def getFileRecursively(root: File): Array[File] = {
     if (root.isDirectory)
       root.listFiles().flatMap(getFileRecursively)
-    else if (root.getName.endsWith(".mts"))
-      Array(root)
-    else
-      Array.empty
+    else {
+      val name = root.getName.toLowerCase(Locale.ENGLISH)
+      if (name.endsWith(".mts") || name.endsWith(".qfl") || name.endsWith(".vbs"))
+        Array(root)
+      else
+        Array.empty
+    }
   }
 
 }

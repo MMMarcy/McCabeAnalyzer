@@ -16,7 +16,7 @@ class UFTFunctionClass(tag: Tag) extends Table[UFTFunction](tag, "FUNCTION") {
   def id = column[Int]("FUN_ID", O.PrimaryKey, O.AutoInc)
 
   // This is the primary key column
-  def revision = column[String]("FUN_REVISION")
+  def revision = column[Int]("FUN_REVISION")
 
   def name = column[String]("FUN_NAME")
 
@@ -24,6 +24,6 @@ class UFTFunctionClass(tag: Tag) extends Table[UFTFunction](tag, "FUNCTION") {
 
   def complexity = column[Int]("FUN_COMPLEXITY")
 
-  def hashcode = column[String]("FUN_HASHCODE")
+  def hashcode = column[Int]("FUN_HASHCODE")
 
 }

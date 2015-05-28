@@ -11,7 +11,7 @@ import scala.io.Source
  */
 object McCabeAnalyzer {
 
-  def startParsing(fileName: String): List[Option[String => (UFTFunction, Seq[UFTLine])]] = {
+  def startParsing(fileName: String): List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
     val src = fileName
     val lines = Source.fromFile(src).getLines().filter(filterFunction)
     createFunctionList(lines, fileName)
@@ -24,8 +24,8 @@ object McCabeAnalyzer {
 
 
   def createFunctionList(lines: Iterator[String], fileName: String):
-  List[Option[String => (UFTFunction, Seq[UFTLine])]] = {
-    val buffer = ListBuffer[Option[String => (UFTFunction, Seq[UFTLine])]]()
+  List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
+    val buffer = ListBuffer[Option[Int => (UFTFunction, Seq[UFTLine])]]()
     while (lines.hasNext) {
       buffer += calculateFunctionScore(lines, fileName)
     }
@@ -33,7 +33,7 @@ object McCabeAnalyzer {
   }
 
   def calculateFunctionScore(lines: Iterator[String], fileName: String):
-  Option[String => (UFTFunction, Seq[UFTLine])] = {
+  Option[Int => (UFTFunction, Seq[UFTLine])] = {
 
     val firstLine = lines.next().toLowerCase.split(" ")
 
@@ -58,7 +58,7 @@ object McCabeAnalyzer {
     val hash = body.mkString("").hashCode
     val score = body.foldLeft(1)((acc, line) => acc + getValueForLine(line))
 
-    Some(str => (0, str, name, fileName, score, hash.toString) -> lineMetrics)
+    Some(str => (0, str, name, fileName, score, hash) -> lineMetrics)
   }
 
   def calculateLineMetrics(line: String): UFTLine = {
@@ -67,7 +67,7 @@ object McCabeAnalyzer {
     (0, 0, line.length, parametersCount)
   }
 
-  def getValueForLine(line: String) = {
+  def getValueForLine(line: String): Int = {
     line match {
       case s if s.contains("if") && s.contains("then") => 1
       case s if s.contains("case") => 1

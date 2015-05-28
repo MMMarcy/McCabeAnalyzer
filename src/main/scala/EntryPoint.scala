@@ -39,7 +39,7 @@ object EntryPoint {
     val b = ListBuffer[(UFTFunction, Seq[UFTLine])]()
     result.foreach {
       case None =>
-      case Some(res) => b += res(revision.getRevisionIndex.toString)
+      case Some(res) => b += res(revision.getRevisionIndex)
     }
     DatabaseHandler.insert(b.toList)
   }

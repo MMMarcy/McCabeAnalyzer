@@ -31,7 +31,6 @@ object McCabeAnalyzer {
     while (nRead > 0 && !detector.isDone) {
       detector.handleData(buf, 0, nRead)
       nRead = fis.read(buf)
-      println(new String(buf))
     }
     // (3)
     detector.dataEnd()

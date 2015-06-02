@@ -1,8 +1,9 @@
+import java.io.File
 import java.nio.charset.{StandardCharsets, Charset}
-import java.util.Locale
 
 import entities._
-import org.omg.IOP.Encoding
+import org.mozilla.universalchardet.UniversalDetector
+
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -13,8 +14,32 @@ import scala.io.Source
  */
 object McCabeAnalyzer {
 
+  def guessEncoding(file: File): Charset = {
+    val buf = Array.ofDim[Byte](4096)
+    val fis = new java.io.FileInputStream(file)
+    // (1)
+    val detector = new UniversalDetector(null)
+
+    // (2)
+    var nRead = fis.read(buf)
+    while ( nRead > 0 && !detector.isDone) {
+      detector.handleData(buf, 0, nRead)
+      nRead = fis.read(buf)
+    }
+    // (3)
+    detector.dataEnd();
+
+    // (4)
+    val encoding = Charset.forName(detector.getDetectedCharset)
+    detector.reset()
+    encoding
+  }
+
+
   def startParsing(fileName: String): List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
-    val lines = Source.fromFile(fileName, StandardCharsets.UTF_16LE.displayName()).getLines().filter(filterFunction)
+    val file = new File(fileName)
+    val charset: Charset = guessEncoding(file)
+    val lines = Source.fromFile(file, charset.displayName()).getLines().filter(filterFunction)
     createFunctionList(lines, fileName)
   }
 

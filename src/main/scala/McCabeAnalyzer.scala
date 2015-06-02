@@ -66,7 +66,7 @@ object McCabeAnalyzer {
     val firstLine = lines.next().toLowerCase.split(" ")
 
     val isFunctionDeclaration = firstLine.exists(s => s.equals("function") || s.equals("sub")) &&
-      !firstLine.exists(s => s.equals("end"))
+      !firstLine.exists(s => s.equals("end") || s.equals("exit"))
 
 
     if (!isFunctionDeclaration)

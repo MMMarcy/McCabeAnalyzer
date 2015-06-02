@@ -50,7 +50,7 @@ object EntryPoint {
   }
 
   protected def getFileRecursively(root: File): Array[File] = {
-    if (root.isDirectory)
+    if (root.isDirectory && !root.getName.equalsIgnoreCase("snapshots"))
       root.listFiles().flatMap(getFileRecursively)
     else {
       val name = root.getName.toLowerCase

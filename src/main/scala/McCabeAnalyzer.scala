@@ -47,7 +47,7 @@ object McCabeAnalyzer {
 
   def filterFunction(line: String): Boolean = {
     //TODO: remove commented lines
-    !(line.contains("'") || line.matches("(?m)^\\s*$[\n\r]{1,}"))
+    !(line.contains("'") || line.matches("(?m)^\\s*$[\n\r]{1,}") || line.contains("exit"))
   }
 
 

@@ -16,7 +16,9 @@ object McCabeAnalyzer {
   def startParsing(fileName: String): List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
     val file = new File(fileName)
     val charset: Charset = guessEncoding(file)
-    val lines = Source.fromFile(file, charset.displayName()).getLines().filter(filterFunction)
+    val lines = Source.fromFile(file, charset.displayName())
+      .getLines()
+      .filterNot(filterFunction)
     createFunctionList(lines, fileName)
   }
 
@@ -45,9 +47,12 @@ object McCabeAnalyzer {
     encoding
   }
 
+
   def filterFunction(line: String): Boolean = {
-    //TODO: remove commented lines
-    !(line.contains("'") || line.matches("(?m)^\\s*$[\n\r]{1,}") || line.contains("exit"))
+    line.contains("'") ||
+      line.matches("(?m)^\\s*$[\n\r]{1,}") ||
+      line.contains("Exit") ||
+      line.contains("exit")
   }
 
 
@@ -66,7 +71,7 @@ object McCabeAnalyzer {
     val firstLine = lines.next().toLowerCase.split(" ")
 
     val isFunctionDeclaration = firstLine.exists(s => s.equals("function") || s.equals("sub")) &&
-      !firstLine.exists(s => s.equals("end") || s.equals("exit"))
+      !firstLine.exists(s => s.equals("end"))
 
 
     if (!isFunctionDeclaration)

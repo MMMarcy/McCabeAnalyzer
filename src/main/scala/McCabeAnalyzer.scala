@@ -1,3 +1,4 @@
+import java.nio.charset.{StandardCharsets, Charset}
 import java.util.Locale
 
 import entities._
@@ -13,6 +14,7 @@ import scala.io.Source
 object McCabeAnalyzer {
 
   def startParsing(fileName: String): List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
+    val lines = Source.fromFile(fileName, StandardCharsets.UTF_16LE.displayName()).getLines().filter(filterFunction)
     createFunctionList(lines, fileName)
   }
 

@@ -70,28 +70,34 @@ object McCabeAnalyzer {
 
     val firstLine = lines.next().toLowerCase.split(" ")
 
-    val isFunctionDeclaration = firstLine.exists(s => s.equals("function") || s.equals("sub")) &&
-      firstLine.forall(s => !s.equals("end"))
+    val isFunctionDeclaration =
+      firstLine.exists(s => s.equals("function") || s.equals("sub")) &&
+        !firstLine.exists(s => s.equals("end"))
 
 
     if (!isFunctionDeclaration)
       return None
 
-    println(firstLine.mkString(" "))
+    try {
 
-    val name = firstLine
-      .dropWhile(l => !(l.equals("function") || l.equals("sub")))(1)
+      val name = firstLine
+        .dropWhile(l => !(l.equals("function") || l.equals("sub")))(1)
 
-    val body = lines
-      .map(_.toLowerCase)
-      .takeWhile(s => !(s.contains("end function") || s.contains("end sub")))
-      .toList
+      val body = lines
+        .map(_.toLowerCase)
+        .takeWhile(s => !(s.contains("end function") || s.contains("end sub")))
+        .toList
 
-    val lineMetrics = body.map(line => calculateLineMetrics(line))
-    val hash = body.mkString("").hashCode
-    val score = body.foldLeft(1)((acc, line) => acc + getValueForLine(line))
+      val lineMetrics = body.map(line => calculateLineMetrics(line))
+      val hash = body.mkString("").hashCode
+      val score = body.foldLeft(1)((acc, line) => acc + getValueForLine(line))
 
-    Some(str => (0, str, name, fileName, score, hash) -> lineMetrics)
+      Some(str => (0, str, name, fileName, score, hash) -> lineMetrics)
+    } catch {
+      case e: IndexOutOfBoundsException =>
+        e.printStackTrace()
+        None
+    }
   }
 
   def calculateLineMetrics(line: String): UFTLine = {

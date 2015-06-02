@@ -1,9 +1,8 @@
 import java.io.File
-import java.nio.charset.{StandardCharsets, Charset}
+import java.nio.charset.{Charset, StandardCharsets}
 
 import entities._
 import org.mozilla.universalchardet.UniversalDetector
-
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -14,6 +13,13 @@ import scala.io.Source
  */
 object McCabeAnalyzer {
 
+  def startParsing(fileName: String): List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
+    val file = new File(fileName)
+    val charset: Charset = guessEncoding(file)
+    val lines = Source.fromFile(file, charset.displayName()).getLines().filter(filterFunction)
+    createFunctionList(lines, fileName)
+  }
+
   def guessEncoding(file: File): Charset = {
     val buf = Array.ofDim[Byte](4096)
     val fis = new java.io.FileInputStream(file)
@@ -22,25 +28,22 @@ object McCabeAnalyzer {
 
     // (2)
     var nRead = fis.read(buf)
-    while ( nRead > 0 && !detector.isDone) {
+    while (nRead > 0 && !detector.isDone) {
       detector.handleData(buf, 0, nRead)
       nRead = fis.read(buf)
+      println(new String(buf))
     }
     // (3)
-    detector.dataEnd();
+    detector.dataEnd()
 
     // (4)
-    val encoding = Charset.forName(detector.getDetectedCharset)
+    val detected = detector.getDetectedCharset
+    val encoding = if (detected == null)
+      StandardCharsets.US_ASCII
+    else
+      Charset.forName(detected)
     detector.reset()
     encoding
-  }
-
-
-  def startParsing(fileName: String): List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
-    val file = new File(fileName)
-    val charset: Charset = guessEncoding(file)
-    val lines = Source.fromFile(file, charset.displayName()).getLines().filter(filterFunction)
-    createFunctionList(lines, fileName)
   }
 
   def filterFunction(line: String): Boolean = {
@@ -64,7 +67,7 @@ object McCabeAnalyzer {
     val firstLine = lines.next().toLowerCase.split(" ")
 
     val isFunctionDeclaration = firstLine.exists(s => s.equals("function") || s.equals("sub")) &&
-    !firstLine.exists(s => s.equals("end"))
+      !firstLine.exists(s => s.equals("end"))
 
 
     if (!isFunctionDeclaration)

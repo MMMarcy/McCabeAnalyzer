@@ -1,6 +1,7 @@
 import java.util.Locale
 
 import entities._
+import org.omg.IOP.Encoding
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -12,8 +13,6 @@ import scala.io.Source
 object McCabeAnalyzer {
 
   def startParsing(fileName: String): List[Option[Int => (UFTFunction, Seq[UFTLine])]] = {
-    val src = fileName
-    val lines = Source.fromFile(src).getLines().filter(filterFunction)
     createFunctionList(lines, fileName)
   }
 
